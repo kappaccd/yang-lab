@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yang Research Lab</title>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+      line-height: 1.6;
+    }
+    header {
+      background: #1d3557;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    nav {
+      background: #457b9d;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: white;
+      margin: 0 1rem;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .container {
+      padding: 2rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+    h2 {
+      color: #1d3557;
+      margin-top: 0;
+    }
+    .team {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .member {
+      flex: 1 1 200px;
+      background: #fff;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      text-align: center;
+    }
+    .member img {
+      width: 200px;
+      height: 200px;
+      border-radius: 40%;
+      object-fit: cover;
+      cursor: zoom-in;
+    }
+
+    /* Lab Photos: base (will be overridden to horizontal) */
+    .lab-photos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: .5rem;
+    }
+    .lab-photos img {
+      width: 200px;
+      height: auto;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 0 8px rgba(0,0,0,0.15);
+      cursor: zoom-in;
+    }
+
+    /* Publications */
+    .pub-list {
+      background: transparent;
+      padding-left: 1.2rem;
+      margin: 0;
+    }
+    .pub-list li {
+      background: #fff;
+      margin: 0 0 1rem 0;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+      border-left: 4px solid #1d3557;
+      list-style-position: outside;
+    }
+    .pub-list em { font-style: italic; }
+    @media (max-width: 640px) {
+      nav a { display: inline-block; margin: 0 .5rem; }
+      .member { flex: 1 1 150px; }
+      .pub-list li { padding: .9rem; }
+      .lab-photos img { width: 100%; max-width: 300px; }
+    }
+
+    /* language + search controls */
+    .lang-controls {
+      display: flex;
+      gap: .5rem;
+      justify-content: center;
+      margin-top: .75rem;
+      flex-wrap: wrap;
+    }
+    .lang-btn {
+      background: #1d3557;
+      color: #fff;
+      border: none;
+      padding: .45rem .8rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .lang-btn[aria-pressed="true"] {
+      background: #264a7a;
+      outline: 2px solid #a8dadc;
+    }
+    .pub-controls {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    #search {
+      flex: 1 1 280px;
+      padding: 0.5rem .75rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    #match-count { opacity: .8; }
+
+    /* ===== Image Modal (Lightbox) ===== */
+    .img-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 2rem;
+    }
+    .img-modal.open { display: flex; }
+    .img-modal img {
+      max-width: min(96vw, 1400px);
+      max-height: 90vh;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,.5);
+    }
+    .img-modal .close-btn {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255,255,255,.9);
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 44px;
+    }
+
+    /* ===== PI Bio card ===== */
+    .pi-bio {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+      padding: 1.25rem;
+      margin-top: 1rem;
+    }
+    .pi-bio h3 {
+      margin: 0 0 .5rem 0;
+      color: #1d3557;
+    }
+    .pi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem 2rem;
+    }
+    .pi-bio h4 {
+      margin: .25rem 0 .5rem 0;
+      color: #1d3557;
+    }
+    .pi-bio ul {
+      margin: 0 0 1rem 1.1rem;
+    }
+    @media (max-width: 800px) {
+      .pi-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <!-- ========== OVERRIDES / NEW for Sliders ========== -->
+  <style>
+    /* Lab Photos -> horizontal scrolling */
+    .lab-photos {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: .5rem;
+    }
+    .lab-photos img {
+      flex: 0 0 auto;
+      scroll-snap-align: center;
+      width: 360px;
+      max-height: 70vh;
+    }
+    .lab-photos::-webkit-scrollbar { height: 10px; }
+    .lab-photos::-webkit-scrollbar-thumb { background: rgba(0,0,0,.2); border-radius: 8px; }
+    @media (max-width: 640px) {
+      .lab-photos img { width: 85vw; }
+    }
+
+    /* Research Interests Carousel */
+    .ri-section h3 { margin-top: 1rem; color: #1d3557; }
+    .ri-carousel { margin-top: .75rem; }
+    .ri-track {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: .5rem;
+    }
+    .ri-item {
+      flex: 0 0 100%;
+      scroll-snap-align: center;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+    .ri-item img {
+      width: 100%;
+      height: 360px;
+      object-fit: cover;
+      border-radius: 8px;
+      display: block;
+      cursor: zoom-in;
+      transition: transform .2s ease;
+    }
+    .ri-item img:hover { transform: scale(1.02); }
+    .ri-caption { margin: .6rem 0 0; font-weight: bold; color: #1d3557; }
+    .ri-controls { display:flex; justify-content: space-between; align-items:center; gap:.75rem; margin:.5rem 0 0; }
+    .ri-btn { background:#1d3557; color:#fff; border:none; padding:.45rem .8rem; border-radius:6px; cursor:pointer; }
+    .ri-dots { display:flex; gap:.4rem; align-items:center; justify-content:center; flex:1; }
+    .ri-dot { width:9px; height:9px; border-radius:50%; background:#cbd5e1; cursor:pointer; }
+    .ri-dot.active { background:#1d3557; }
+    @media (max-width: 640px) { .ri-item img { height: 46vh; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="title">Chen-I Yang's Research Group</h1>
+    <p id="subtitle">Department of Chemistry, Tunghai University</p>
+    <div class="lang-controls">
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')" aria-pressed="true">EN</button>
+      <button class="lang-btn" id="btn-zh" onclick="setLang('zh')" aria-pressed="false">中文</button>
+    </div>
+  </header>
+
+  <nav>
+    <a href="#home" id="nav-home">Home</a>
+    <a href="#team" id="nav-team">Team</a>
+    <a href="#publications" id="nav-pubs">Publications</a>
+  </nav>
+
+  <div class="container" id="home">
+    <h2 id="welcome-title">Welcome to Our Lab</h2>
+    <p id="welcome-text">Our research focuses on the design and development of novel coordination polymers and MOFs with magnetic, catalytic, and sensing functionalities. We aim to explore structure-property relationships through crystal engineering and materials chemistry approaches.</p>
+
+    <!-- Research Interests -->
+    <div class="ri-section">
+      <h3 id="ri-title">Research Interests</h3>
+
+      <div class="ri-carousel">
+        <div class="ri-track" id="ri-track">
+          <div class="ri-item">
+            <img src="https://lh3.googleusercontent.com/pw/AP1GczNmls0MRMkX4Dd5Hy2B8ZlAVLDNz9PR_32An2plOHiniZg72Edraasz_HrfQpOuJLcpAmXb-M2H-T8oiCibygyosdjHo8l-2Vfan_kxHBojNhNzjlOtMnB1GgIGsQVh5zpmIPWAusStqfrDyYQpkX4BgA=w960-h720-s-no-gm?authuser=0" alt="Molecule-based magnets">
+            <div class="ri-caption" id="ri1-title">Molecule-based magnets</div>
+          </div>
+          <div class="ri-item">
+            <img src="https://lh3.googleusercontent.com/pw/AP1GczOLaGyXQ-elChCsXAS83PQJB4eLdikPDPrSkaCmQbbrcl6J8ge0DVIJNoIjOW0LlIn8QC3eb6Jj0C0DKRAX6xD_dmuh3ZcT9OrZPI1BtAGhlfaadf1Ll4tQl06vons_JlHdlzp5MBaQ9W9Yz9w38dynNw=w960-h720-s-no-gm?authuser=0" alt="Novel coordination polymers">
+            <div class="ri-caption" id="ri2-title">Design and development of novel coordination polymers</div>
+          </div>
+          <div class="ri-item">
+            <img src="https://lh3.googleusercontent.com/pw/AP1GczPaD2Wi2C9JwlSRCGfulORNB8bLSKHmmFOHgcfE58tot_G1Bp2DWls_nZ0NyWD6Q2FObb0_5lG1eJDGz2WVO_egFn3mEdARtKce93HqPr8ythBFmXZ7g1FEpwzTlF05biieau-CXFNnorc3KvvWIKiLDQ=w688-h844-s-no-gm?authuser=0" alt="Functional MOFs">
+            <div class="ri-caption" id="ri3-title">Functional metal-organic frameworks (MOFs)</div>
+          </div>
+        </div>
+        <div class="ri-controls">
+          <button class="ri-btn" onclick="riSlide(-1)">◀ Prev</button>
+          <div class="ri-dots" id="ri-dots"></div>
+          <button class="ri-btn" onclick="riSlide(1)">Next ▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" id="team">
+    <h2 id="team-title">Team Members</h2>
+
+    <!-- 實驗室負責人 -->
+    <h3>實驗室負責人</h3>
+    <div class="team">
+      <div class="member">
+        <img src="https://lh3.googleusercontent.com/pw/AP1GczPDnM2lmva7_j7OMSEV8scIymmGxTXQ-4R_7q-hxJ2kOewF7bHnNTkIXqkC9gX7jZ9iBBPEjq7IAPpx09C7_nOOCWtzbYrIqckTsp6_syP6TkJuOvia6NHjYTzSj7ZAU7wLY2RVPtQRDUHwggy4zRJPPw=w844-h844-s-no-gm?authuser=0" alt="Prof. Chen-I Yang">
+        <h3>楊振宜教授<br>Prof. Chen-I Yang</h3>
+        <p id="pi-role">Principal Investigator</p>
+      </div>
+    </div>
+
+    <!-- PI Bio card -->
+    <div class="pi-bio" aria-labelledby="pi-bio-title">
+      <h3 id="pi-bio-title">PI Profile / 學經歷</h3>
+      <div class="pi-grid">
+        <div>
+          <h4>Education</h4>
+          <ul>
+            <li>Ph.D., Chemistry, National Cheng Kung University, 2007</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Experience</h4>
+          <ul>
+            <li>Professor, Department of Chemistry, Tunghai University, Taiwan, 2019–Present</li>
+            <li>Associate Professor, Department of Chemistry, Tunghai University, Taiwan, 2014–2019</li>
+            <li>Assistant Professor, Department of Chemistry, Tunghai University, Taiwan, 2011–2014</li>
+            <li>Postdoctoral Research Fellow, Institute of Chemistry, Academia Sinica, 2009–2011</li>
+            <li>Postdoctoral Research Fellow, Department of Chemistry, National Cheng Kung University, 2008–2009</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 碩士班研究生 (Graduate Students) -->
+    <h3>碩士班研究生 (Graduate Students) </h3>
+    <p id="grad-role" style="margin-top:-0.25rem; opacity:.9;"></p>
+    <div class="team">
+      <div class="member">
+        <img src="https://lh3.googleusercontent.com/pw/AP1GczOQ3tEvCw_f9YjfFeGH7_zegQ85qEtKB7sUq0EZ8HtJEWFLYmz8PxqqxqMRJoMAzDYLDkXlEn5yDAfyjUwTWuSilQ5YfI5ZRPMQ7v_L6gasyX50N4EkvMdyMHx-JXELDIjpB1AVPfwhYE4sjaPb0ScbOg=w702-h844-s-no-gm?authuser=0" alt="Shao Teng Li">
+        <h3>李少騰<br>Shao Teng Li</h3>
+      </div>
+      <div class="member">
+        <img src="https://lh3.googleusercontent.com/pw/AP1GczPmbnAgD96EHwuu7CbSq2kW4vg8Chj99IcLe3ht-iikUpa70zxNvaaSJvPnUykU7v6la9-M_XRH71-xi72b3KO3zx9t19qPpS-DSrEp3ENQQwOUHpdq17R4EdAdJDeAIA-lVfXDQxeTABtafqoy4aCaZA=w611-h844-s-no-gm?authuser=0" alt="Shu-Hao Liu">
+        <h3>劉書豪<br>Shu-Hao Liu</h3>
+      </div>
+    </div>
+
+    <!-- 大學部專題生 (Undergraduate Students) -->
+    <h3>大學部專題生 (Undergraduate Students) </h3>
+    <div class="team">
+      <div class="member">
+        <img src="https://lh3.googleusercontent.com/pw/AP1GczMAQGP6ON57JiIOqjLwBebdz42aPGJLw2gk8Sh95mz8h7QGiHlJyHlJUsRxlUcHDL9R2YQ-6oSgnWQhxWkSUg5JW_gQu6yaEcm0L6-ajwVNbYYqPJh2MriYTJGUrb4dUeUSMDOmjkGvDgoperYbG7TRcw=w633-h844-s-no-gm?authuser=0" alt="Fang-Yi Li">
+        <h3>李芳儀<br>Fang-Yi Li</h3>
+      </div>
+      <div class="member">
+        <img src="https://lh3.googleusercontent.com/pw/AP1GczNkfpTDejh1W2k8CB0hrivHjBlU6fpLE3WtOCXE358mt-PHotK-pabbDqJFLEPuaCcZzwj4aqSQo84s390GPQ0DsPZztsPFORbKErOrhqoDEUd12JiCN04RIkvloafvFJU97_-bQoH-rFbFMBaMxU3DvQ=w475-h844-s-no-gm?authuser=0" alt="I-Chien Chiao">
+        <h3>趙苡茜<br>I-Chien Chiao</h3>
+      </div>
+      <div class="member">
+        <img src="https://lh3.googleusercontent.com/pw/AP1GczOM_SnNriHAIKyW_o_vze6wfLg6vuVgQ7JJ1hVpKNaI2yeKRTYk53M7HQ5e3m7JjW9uF6GE-mf1chxQXIVea9oxvy4rYD8cNwrnMGkorMjp-m0ieCXx0oo-uxwpYMyZpYL83w13_Tu0ygIEqpVadcKXiA=w633-h844-s-no-gm?authuser=0" alt="Zih Jing Yan (Bill)">
+        <h3>姚子敬<br>Zih Jing Yan (Bill)</h3>
+      </div>
+      <div class="member">
+        <img src="https://lh3.googleusercontent.com/pw/AP1GczOOup4dzvpQ3TMiLz6dNc1-Lmr18v-EfXll_w-u17JCBZTI-EurW7kgyTd5saYdQcweVefnhBs3cAvqnhoX_6pIKKVqGscFS0agDGMH9mfi7tZFwizVM4zrQB2ZmUVsLT1Q5B4FHnyCCSTzG3siLQ1dPw=w633-h844-s-no-gm?authuser=0" alt="Yu Fan Chou">
+        <h3>周宇帆<br>Yu Fan Chou</h3>
+      </div>
+    </div>
+
+    <!-- 實驗室照片 (Lab Photos) -->
+    <h3 id="labphotos-title">Lab Photos</h3>
+
+    <div class="lab-photos" id="lab-photos">
+      <img src="https://lh3.googleusercontent.com/pw/AP1GczNzWzRoZvUu3NC6yXyUxcz7Hrj0swSbfqrdwV3RtA7sGzf-IXl6V1-3o6B9bsMWQkhABdVaDJL6VMtaowV6O5o7pne9UYNGpwtR42sfmv-U6iGWqADEeVwz0EHEvkWlzc33KWzag-bofqvnlBrDDc9M0A=w1220-h844-s-no-gm?authuser=0" alt="Lab Photo 1">
+      <img src="https://lh3.googleusercontent.com/pw/AP1GczOJUW2T1ppouuHO36TtCuSkcX_XWktwxeyq-eYlH0uadJSkmK8JUSxEPYFBn0WluuMFrIJMwyYBoHBXSXn3ZMkI36I1Wzy6Mg3oXewZBb3FdDbKfiO7NvIoysqu1gZEVqAiVaGacIFYew55oWK-IlEDtA=w1255-h844-s-no-gm?authuser=0" alt="Lab Photo 2">
+      <img src="https://lh3.googleusercontent.com/pw/AP1GczOJs8_ilopY0Ntg3qeMgzisK6Uf8bnuFy57nmKKxLx1JGHvi5Kw2K5rr5J3g1-DYyN6a_VK4hfgUCd_eWpsAGLu9R1z7JvUU4UZqHsWCbH8Wxfy6KaAAbrp1KCr_z6CqknTOZVTInRFc5HXHlbNy_Hntg=w1125-h844-s-no-gm?authuser=0" alt="Lab Photo 3">
+      <img src="https://lh3.googleusercontent.com/pw/AP1GczMBaRxKoxT69_eVIco4RwwgsxVZTolEb5TAik0vUpE0kD9Jqjd_IaVbV7-AGox4ZtNILm0V8Xd98OD6lhqe7DXa8QroWD1xIMA7a1usGhE30gqET9OXwrWFmg9y9-ki2tWb1LAeHdDDpgm-e1h8pCJ6yw=w633-h844-s-no-gm?authuser=0" alt="Lab Photo 4">
+      <img src="https://lh3.googleusercontent.com/pw/AP1GczPd_iVisTrqqBuRUdTvHbOH0D90_3rCmz0hmE5WUVLFIflwQU9BVB3vbssCHYllQdADnyVqth4S_UZ1zjAoGqY5g07klfZIarLlx-Nr-GDkl3WeAFSDjCGVIT97YzLxqCzmmCIWCVhu7D4KrxqFihpBRg=w1125-h844-s-no-gm?authuser=0" alt="Lab Photo 5">
+    </div>
+  </div>
+
+  <div class="container" id="publications">
+    <h2 id="pubs-title">Recent Publications</h2>
+
+    <div class="pub-controls">
+      <input type="text" id="search" placeholder="Search publications… (author, title, journal, year)" oninput="filterPubs()">
+      <span id="match-count" aria-live="polite"></span>
+    </div>
+
+    <ol class="pub-list" id="pub-list" reversed>
+      <li>Yi-Lin Kuo, Hsin-Kuan Liu, Chen-I Yang. Spin Canting and Weak Ferromagnetism in a New 2D Coordination Polymer with the Co(II) Chain Bridged by a Single End-to-End Azide. <em>Inorganics</em>, <strong>2023</strong>, 11, 444.</li>
+      <li>Swathi M. Gowdru, Chin-Hsuan Lin, Chun-Chih Chang, Yi-Chia Chen, Yi-Lin Kuo, Chia-Che Chang, Shivaraj B. Patil, Chih-Wen Pao, Jeng-Lung Chen, Chang-Ru Lee, Chung-Kai Chang, Yu-Chun Chuang, Hwo-Shuenn Sheu, Chen-I Yang, Di-Yan Wang. Revealing the Structural Transformation between the Activity and Stability of 2D and 3D Co−Mo Metal−Organic Frameworks for a Highly Active Oxygen Evolution Reaction. <em>ACS Sustainable Chemistry &amp; Engineering</em>, <strong>2022</strong>, 10, 12297.</li>
+      <li>Hsu-Yen Tang, Gene-Hsiang Lee, Kwai-Kong Ng, Chen-I Yang. A Three-Dimensional Coordination Framework with a Ferromagnetic Coupled Ni(II)-CrO<sub>4</sub> Layer: Synthesis, Structure, and Magnetic Studies. <em>Polymers</em>, <strong>2022</strong>, 14, 1735.</li>
+      <li>Benamara, N.; Setifi, Z.; Yang, C.-I.; Bernès, S.; Geiger, D. K.; Kürkçüoğlu, G. S.; Setifi, F.; Reedijk, J. Coexistence of Spin Canting and Metamagnetism in a One-Dimensional Mn(II) Compound Bridged by Alternating Double End-to-End and Double End-On Azido Ligands and the Analog Co(II) Compound. <em>Magnetochemistry</em>, <strong>2021</strong>, 7(4), 50.</li>
+      <li>Wei-Cheng Lin, H. R., Chen-I Yang, Chien-Yen Weng, Joon Ik Jang, Hsu, K.-F. Perovskite-like Framework Encapsulated with Fe-Based Magnetic Units in Ba<sub>10</sub>Fe<sub>3</sub>Sb<sub>7</sub>Se<sub>24</sub>. <em>Inorganic Chemistry</em>, <strong>2020</strong>, 59, 5509–5517.</li>
+      <li>Yu, H.-C.; Lin, C.-H.; Yang, C.-I. Temperature-Controlled Assembly/Reassembly of Two Dicarboxylate-Based Three-Dimensional Co(II) Coordination Polymers with an Antiferromagnetic Metallic Layer and a Ferromagnetic Metallic Chain. <em>Polymers</em>, <strong>2019</strong>, 11(5), 795.</li>
+      <li>Pounraj Thanasekaran, T. T. L., Ya-Chuan Kao, Chih-Chien Lin, Chen-I Yang, Kuang-Lieh Lu. Self-assembly: An intriguing relationship between structures of metal complexes and shapes of ancient Chinese characters. <em>Journal of the Chinese Chemical Society</em>, <strong>2019</strong>, 66, 1027–1030.</li>
+      <li>Dong, S.-S.; Yang, C.-I. A Three-Dimensional Nickel(II) Framework from a Semi-Flexible Bipyrimidyl Ligand Showing Weak Ferromagnetic Behavior. <em>Polymers</em>, <strong>2019</strong>, 11(1), 119.</li>
+      <li>Zu-Zhen Zhang, H.-T. C., Yi Lin Kuo, Gene-Hsiang Lee, Chen-I Yang. Two New Three-Dimensional Pillared-Layer Co(II) and Cu(II) Frameworks Involving a [M<sub>2</sub>(EO-N<sub>3</sub>)<sub>2</sub>] Motif from a Semi-Flexible N-Donor Ligand, 5,5′-Bipyrimidin: Syntheses, Structures and Magnetic Properties. <em>Polymers</em>, <strong>2018</strong>, 10, 229–243.</li>
+      <li>Zu-Zhen Zhang, G.-H. L., Chen-I Yang. The use of a semi-flexible bipyrimidyl ligand for the construction of azide-based coordination polymers: structural diversities and magnetic properties. <em>Dalton Transactions</em>, <strong>2018</strong>, 47, 16709–16722.</li>
+      <li>Chin-May Ngue, C.-W. C., Gene-Hsiang Lee, Shie-Ming Peng, Man-Kit Leung, Chen-I. Yang, Yen-Hsiang Liu, Kuang-Lieh Lu. A Co(II) framework derived from a tris(4-(triazol-1-yl)phenyl)amine redox-active linker: an electrochemical and magnetic study. <em>Dalton Transactions</em>, <strong>2018</strong>, 47, 9341–9346.</li>
+      <li>Chun-Hung Chiang, Y.-W. T., Chen-I. Yang, Motohiro Nakano, Wun-Long Wan, Long-Li Lai, Lee, G.-H. The synthesis of three new Cu<sub>5</sub>, Cu<sub>8</sub> and Cu<sub>12</sub> clusters via the use of a semi-flexible aminotriazine-based bis-methylpyridine ligand. <em>Dalton Transactions</em>, <strong>2017</strong>, 46(4), 1237–1248.</li>
+      <li>Chiang, C.-H.; Tzeng, Y.-W.; Yang, C.-I.; Nakano, M.; Wan, W.-L.; Lai, L.-L.; Lee, G.-H. The synthesis of three new Cu<sub>5</sub>, Cu<sub>8</sub> and Cu<sub>12</sub> clusters via the use of a semi-flexible aminotriazine-based bis-methylpyridine ligand. <em>Dalton Transactions</em>, <strong>2017</strong>, 46(4), 1237–1248.</li>
+      <li>Tsao, J.-Y.; Tsai, J.-D.; Yang, C.-I. Azide-bridged Cu(II), Mn(II) and Co(II) coordination polymers constructed with a bifunctional ligand of 6-(1H-tetrazol-5-yl)-2,2′-bipyridine. <em>Dalton Transactions</em>, <strong>2016</strong>, 45(8), 3388–3397.</li>
+      <li>Yang, C.-I; Zhang, Z.-Z; Lin, S.-B. A review of manganese-based molecular magnets and supramolecular architectures from phenolic oximes. <em>Coordination Chemistry Reviews</em>, <strong>2015</strong>, 289, 289–314.</li>
+      <li>Feng, P.-Y; Yang, C.-I; Huang, P.-J; Lee, G.-H; Tsai, H.-L. A helical salicyladoxime-based manganese triangle chain with single-molecule magnet behavior. <em>Inorganic Chemistry Communications</em>, <strong>2015</strong>, 55, 112–115.</li>
+      <li>Wu, B.-Y; Yang, C.-I; Nakano, M; Lee, G.-H. Ferromagnetic interaction and slow magnetic relaxation in a Co<sub>3</sub> cluster-based three-dimensional framework. <em>Dalton Transactions</em>, <strong>2014</strong>, 43(1), 47–50.</li>
+      <li>Tzeng, Y.-W; Lin, C.-J; Nakano, M; Yang, C.-I; Wan, W.-L; Lai, L.-L. A semi-flexible aminotriazine-based bis-methylpyridine ligand for the design of nickel(II) spin clusters. <em>Dalton Transactions</em>, <strong>2014</strong>, 43(8), 3044–3047.</li>
+      <li>Tseng, T.-W; Luo, T.-T; Su, C.-C; Hsu, H.-H; Yang, C.-I; Lu, K.-L. An unusual cobalt(II)-based single-walled metal–organic nanotube. <em>CrystEngComm</em>, <strong>2014</strong>, 16(13), 2626–2633.</li>
+      <li>Tsai, J.-D; Yang, C.-I. Utilization of a ligand containing 2,2′-bipyridyl and tetrazolate groups to construct a 2D Co(II) coordination polymer: Spin canting and metamagnetism. <em>Dalton Transactions</em>, <strong>2014</strong>, 43(41), 15576–15582.</li>
+      <li>Chao, T.-L; Yang, C.-I. Three new homochiral coordination polymers involving two three-dimensional structural architectures: Syntheses, structures and magnetic properties. <em>Journal of Solid State Chemistry</em>, <strong>2014</strong>, 211, 25–31.</li>
+      <li>Wu, H.-C; Lin, C.-J; Yang, C.-I; Kuei, C.-H. In-situ synthesis of a pyrazine-based triazolate ligand towards a Cu<sub>6</sub> cluster: Synthesis, crystal structure and magnetic properties. <em>Polyhedron</em>, <strong>2013</strong>, 66, 70–74.</li>
+      <li>Wu, H.-C; Jhu, Z.-R; Lee, G.-H; Peng, S.-M; Yang, C.-I; Kuei, C.-H. Lanthanide coordination polymers based on Ln<sub>2</sub> cluster: Syntheses, crystal structures, photoluminescence and magnetic properties. <em>Polyhedron</em>, <strong>2013</strong>, 66, 34–38.</li>
+      <li>Liu, Y.-H; Lee, S.-H; Chiang, J.-C; Chen, P.-C; Chien, P.-H; Yang, C.-I. Dehydration induced 2D-to-3D crystal-to-crystal network re-assembly and ferromagnetism tuning within two chiral copper(II)–tartrate coordination polymers. <em>Dalton Transactions</em>, <strong>2013</strong>, 42(48), 16857–16867.</li>
+      <li>Jhu, Z.-R; Yang, C.-I; Lee, G.-H. Two new series of rare-earth organic frameworks involving two structural architectures: syntheses, structures and magnetic properties. <em>CrystEngComm</em>, <strong>2013</strong>, 15(13), 2456–2465.</li>
+      <li>Jhan, S.-Y; Huang, S.-H; Yang, C.-I; Tsai, H.-L. Structure and magnetic properties of a 3d–4f Co<sup>III</sup><sub>2</sub>Dy<sup>III</sup><sub>4</sub> cluster. <em>Polyhedron</em>, <strong>2013</strong>, 66, 222–227.</li>
+      <li>Huang, S.-H; Jhan, S.-Y; Yang, C.-I; Tsai, H.-L. Synthesis, structure, and magnetic properties of a tetradecanuclear manganese complex. <em>Polyhedron</em>, <strong>2013</strong>, 66, 245–251.</li>
+      <li>Tsai, H.-L; Yang, C.-I; Wernsdorfer, W; Huang, S.-H; Jhan, S.-Y; Liu, M.-H; Lee, G.-H. Mn<sub>4</sub> single-molecule-magnet-based polymers of a one-dimensional helical chain and a three-dimensional network: syntheses, crystal structures, and magnetic properties. <em>Inorganic Chemistry</em>, <strong>2012</strong>, 51(24), 13171–13180.</li>
+    </ol>
+  </div>
+
+  <!-- Shared Image Modal -->
+  <div id="img-modal" class="img-modal" role="dialog" aria-modal="true" aria-label="Image viewer" onclick="if(event.target===this) closeModal()">
+    <button class="close-btn" aria-label="Close" onclick="closeModal()">×</button>
+    <img id="modal-img" src="" alt="">
+  </div>
+
+  <script>
+    const langContent = {
+      en: {
+        title: "Chen-I Yang's Research Group",
+        subtitle: "Department of Chemistry, Tunghai University",
+        navHome: "Home",
+        navTeam: "Team",
+        navPubs: "Publications",
+        welcomeTitle: "Welcome to Our Group",
+        welcomeText:
+          "Our research focuses on the design and development of novel coordination polymers and MOFs with magnetic, catalytic, and sensing functionalities. We aim to explore structure-property relationships through crystal engineering and materials chemistry approaches.",
+        teamTitle: "Team Members",
+        piRole: "Principal Investigator",
+        gradRole: "Graduate Student",
+        pubsTitle: "Publications",
+        searchPH: "Search publications… (author, title, journal, year)",
+        labPhotosTitle: "Lab Photos",
+        riTitle: "Research Interests",
+        ri1: "Molecule-based magnets",
+        ri2: "Design and development of novel coordination polymers",
+        ri3: "Functional metal-organic frameworks (MOFs)"
+      },
+      zh: {
+        title: "楊振宜研究室",
+        subtitle: "東海大學 化學系",
+        navHome: "首頁",
+        navTeam: "成員",
+        navPubs: "發表成果",
+        welcomeTitle: "歡迎來到我們的實驗室",
+        welcomeText:
+          "我們的研究專注於設計與開發新型配位聚合物與金屬有機框架（MOFs），應用於磁性、催化與感測；並透過晶體工程與材料化學方法，探索結構與性質之間的關聯。",
+        teamTitle: "成員介紹",
+        piRole: "主持人",
+        gradRole: "研究生",
+        pubsTitle: "發表成果",
+        searchPH: "搜尋發表成果…（作者、標題、期刊、年份）",
+        labPhotosTitle: "實驗室照片",
+        riTitle: "研究方向",
+        ri1: "分子磁鐵 (Molecule-based magnets)",
+        ri2: "設計與開發新穎配位聚合物",
+        ri3: "功能性金屬-有機框架化合物 (MOFs)"
+      }
+    };
+
+    function setLang(lang) {
+      const L = langContent[lang] || langContent.en;
+      document.documentElement.lang = lang === "zh" ? "zh-Hant" : "en";
+      document.getElementById('title').textContent = L.title;
+      document.getElementById('subtitle').textContent = L.subtitle;
+      document.getElementById('nav-home').textContent = L.navHome;
+      document.getElementById('nav-team').textContent = L.navTeam;
+      document.getElementById('nav-pubs').textContent = L.navPubs;
+      document.getElementById('welcome-title').textContent = L.welcomeTitle;
+      document.getElementById('welcome-text').textContent = L.welcomeText;
+      document.getElementById('team-title').textContent = L.teamTitle;
+      document.getElementById('pi-role').textContent = L.piRole;
+      document.getElementById('grad-role').textContent = L.gradRole;
+      document.getElementById('pubs-title').textContent = L.pubsTitle;
+      document.getElementById('search').placeholder = L.searchPH;
+      document.getElementById('btn-en').setAttribute('aria-pressed', lang === 'en');
+      document.getElementById('btn-zh').setAttribute('aria-pressed', lang === 'zh');
+
+      const lp = document.getElementById('labphotos-title');
+      if (lp) lp.textContent = L.labPhotosTitle;
+
+      const riT = document.getElementById('ri-title');
+      if (riT) riT.textContent = L.riTitle;
+      const r1 = document.getElementById('ri1-title');
+      const r2 = document.getElementById('ri2-title');
+      const r3 = document.getElementById('ri3-title');
+      if (r1) r1.textContent = L.ri1;
+      if (r2) r2.textContent = L.ri2;
+      if (r3) r3.textContent = L.ri3;
+    }
+
+    function filterPubs() {
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const items = Array.from(document.querySelectorAll('#pub-list > li'));
+      let shown = 0;
+      items.forEach(li => {
+        const hit = li.textContent.toLowerCase().includes(q);
+        li.style.display = hit ? '' : 'none';
+        if (hit) shown++;
+      });
+      const total = items.length;
+      const counter = document.getElementById('match-count');
+      counter.textContent = q ? `${shown}/${total}` : '';
+    }
+
+    /* ===== Image Lightbox ===== */
+    function openModal(src, alt='') {
+      const modal = document.getElementById('img-modal');
+      const modalImg = document.getElementById('modal-img');
+      modalImg.src = src;
+      modalImg.alt = alt || '';
+      modal.classList.add('open');
+      document.addEventListener('keydown', escClose);
+    }
+    function closeModal() {
+      const modal = document.getElementById('img-modal');
+      const modalImg = document.getElementById('modal-img');
+      modal.classList.remove('open');
+      modalImg.src = '';
+      modalImg.alt = '';
+      document.removeEventListener('keydown', escClose);
+    }
+    function escClose(e) { if (e.key === 'Escape') closeModal(); }
+
+    function initLightbox() {
+      const clickableImgs = document.querySelectorAll('.ri-track img, .lab-photos img, .member img');
+      clickableImgs.forEach(img => {
+        img.addEventListener('click', () => openModal(img.src, img.alt));
+      });
+    }
+
+    /* ===== Research Interests Carousel ===== */
+    function riSlide(direction = 1) {
+      const track = document.getElementById('ri-track');
+      if (!track) return;
+      const step = track.clientWidth;
+      track.scrollBy({ left: direction * step, behavior: 'smooth' });
+    }
+    function riInitDots() {
+      const track = document.getElementById('ri-track');
+      const dots = document.getElementById('ri-dots');
+      if (!track || !dots) return;
+      const items = track.children;
+      dots.innerHTML = '';
+      for (let i = 0; i < items.length; i++) {
+        const d = document.createElement('span');
+        d.className = 'ri-dot' + (i === 0 ? ' active' : '');
+        d.addEventListener('click', () => {
+          const left = items[i].offsetLeft;
+          track.scrollTo({ left, behavior: 'smooth' });
+        });
+        dots.appendChild(d);
+      }
+      const updateActive = () => {
+        const idx = Math.round(track.scrollLeft / track.clientWidth);
+        dots.querySelectorAll('.ri-dot').forEach((el, j) => {
+          el.classList.toggle('active', j === idx);
+        });
+      };
+      track.addEventListener('scroll', () => {
+        window.requestAnimationFrame(updateActive);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setLang('en');
+      riInitDots();
+      initLightbox();
+    });
+  </script>
+</body>
+</html>
